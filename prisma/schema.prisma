@@ -1,0 +1,85 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Customer {
+  id        String    @id @default(uuid())
+  name      String
+  email     String?
+  company   String?
+  phone     String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  interactions Interaction[]
+  memories     Memory[]
+  deals        Deal[]
+
+  @@index([name])
+  @@index([createdAt])
+}
+
+model Interaction {
+  id         String    @id @default(uuid())
+  customerId String
+  type       String // 'call', 'email', 'meeting'
+  notes      String
+  createdAt  DateTime  @default(now())
+  deletedAt  DateTime?
+
+  customer Customer @relation(fields: [customerId], references: [id])
+
+  @@index([customerId])
+  @@index([createdAt])
+}
+
+model Memory {
+  id           String    @id @default(uuid())
+  customerId   String
+  type         String // 'preference', 'objection', 'pattern', 'competitor'
+  content      String
+  confidence   Float
+  sourceNoteId String?
+  createdAt    DateTime  @default(now())
+  deletedAt    DateTime?
+
+  customer Customer @relation(fields: [customerId], references: [id])
+
+  @@index([customerId])
+  @@index([createdAt])
+}
+
+model Deal {
+  id         String    @id @default(uuid())
+  customerId String
+  title      String
+  value      Float
+  stage      String // 'lead', 'qualified', 'proposal', 'negotiation', 'closed'
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
+
+  customer Customer @relation(fields: [customerId], references: [id])
+
+  @@index([stage])
+  @@index([customerId])
+  @@index([createdAt])
+}
+
+model Activity {
+  id          String   @id @default(uuid())
+  type        String // 'customer_update', 'deal_stage_change'
+  entityId    String // 'customerId', 'dealId'
+  description String
+  createdAt   DateTime @default(now())
+
+  @@index([entityId])
+  @@index([type])
+  @@index([createdAt])
+}
